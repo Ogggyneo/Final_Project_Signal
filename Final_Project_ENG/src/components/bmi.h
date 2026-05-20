@@ -8,7 +8,7 @@ extern float prevAcc, prevDiffAcc;
 // function declare 
 void initBMI160();
 
-void readBMI160(int16_t &ax, int16_t &ay, int16_t &az);
+bool readBMI160(int16_t &ax, int16_t &ay, int16_t &az);
 
 float calculateAccelerationMagnitude(int16_t ax, int16_t ay, int16_t az);
 
