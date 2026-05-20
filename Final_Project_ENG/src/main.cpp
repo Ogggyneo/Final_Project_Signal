@@ -1,22 +1,17 @@
-// #include <Arduino.h>
-// #include "D:\SPRING(1)\ENG\Final_Project_Signal\Final_Project_ENG\src\components\bmi.h"
-// void loop(){
-//   //BMI
-//     int16_t ax, ay, az;
-//     readBMI160(ax, ay, az);
-//     float acc = calculateAccelerationMagnitude(ax, ay, az);
-//     detectStep(acc);
-//     Serial.print("Step Count: ");
-// }
+// 
+
 #include <Arduino.h>
 
 void setup()
 {
     Serial.begin(115200);
+    delay(2000);
+
+    Serial.println("HELLO");
 }
 
 void loop()
 {
-    Serial.println("YOLO UNO WORKING");
+    Serial.println("RUNNING");
     delay(1000);
 }
