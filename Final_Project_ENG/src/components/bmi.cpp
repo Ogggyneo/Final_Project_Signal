@@ -4,7 +4,7 @@
 #include <math.h>
 
 //global variables
-int StepCount = 0;
+int stepCount = 0;
 float prevAcc = 0;
 float prevDiffAcc = 0;
 
@@ -40,7 +40,7 @@ void detectStep (float acc){
 
     // detect step peak
     if (prevDiffAcc > 0 && diffAcc < 0 && filtered > 400) {
-        StepCount++;
+        stepCount++;
     }
 
     prevAcc = acc;

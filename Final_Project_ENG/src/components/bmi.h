@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #define BMI160_ADDR 0x69
 //global variables
-extern int StepCount;
+extern int stepCount;
 extern float prevAcc, prevDiffAcc;
 // function declare 
 void initBMI160();
