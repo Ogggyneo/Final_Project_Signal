@@ -7,8 +7,11 @@ extern int StepCount;
 extern float prevAcc, prevDiffAcc;
 // function declare 
 void initBMI160();
+
 void readBMI160(int16_t &ax, int16_t &ay, int16_t &az);
-void CalculateAcc(int16_t ax, int16_t ay, int16_t az);
+
+float calculateAccelerationMagnitude(int16_t ax, int16_t ay, int16_t az);
+
 void detectStep(float acc);
 
 #endif
