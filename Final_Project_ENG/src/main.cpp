@@ -29,6 +29,8 @@ void loop()
 {
     // BMI160 variables
     int16_t ax, ay, az;
+    float distance = 0.0f;
+    float acc = 0.0f;
 
     // read accelerometer
     if (readBMI160(ax, ay, az))
@@ -39,6 +41,8 @@ void loop()
 
         // detect steps
         detectStep(acc);
+        // get distance
+        float distance = getDistanceKm();
 
         // debug print
         // Serial.print("AX: ");
@@ -57,10 +61,17 @@ void loop()
     //max30102 variables
     float bpm = readHeartRate();
     // print data
+    Serial.print(bpm);
+    Serial.print(",");
+    Serial.print(stepCount);
+    Serial.print(",");
+    Serial.println(distance);
     Serial.print("BPM: ");
-    Serial.println(bpm);
-    Serial.print(" | STEPS: ");
-    Serial.println(stepCount);
-
+    // debug print
+    // Serial.println(bpm);
+    // Serial.print(" | STEPS: ");
+    // Serial.println(stepCount);
+    // Serial.print(" | DISTANCE: "); 
+    // Serial.println(distance);
     delay(50);
 }

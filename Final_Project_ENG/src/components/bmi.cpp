@@ -3,22 +3,29 @@
 #include <Wire.h>
 #include <math.h>
 
-// ===== GLOBAL VARIABLES =====
+// ================= GLOBAL VARIABLES =================
 int stepCount = 0;
 
 float prevAcc = 0;
+float filteredAcc = 0;
 float prevFiltered = 0;
 
-// ===== INIT BMI160 =====
+float alpha = 0.9;  // smoothing factor
+
+unsigned long lastStepTime = 0;
+const int stepDelay = 300; // ms debounce
+
+float stepLength = 0.75; // meters (average walking/jogging)
+
+// ================= INIT BMI160 =================
 void initBMI160()
 {
-    Wire.begin(11, 12);   // SDA=11 SCL=12
+    Wire.begin(11, 12);
     Wire.setClock(100000);
 
     Wire.beginTransmission(BMI160_ADDR);
-
-    Wire.write(0x7E);     // CMD register
-    Wire.write(0x11);     // ACC normal mode
+    Wire.write(0x7E);   // command register
+    Wire.write(0x11);   // accelerometer normal mode
 
     byte error = Wire.endTransmission();
 
@@ -35,23 +42,17 @@ void initBMI160()
     delay(100);
 }
 
-// ===== READ ACC DATA =====
+// ================= READ ACCELERATION =================
 bool readBMI160(int16_t &ax, int16_t &ay, int16_t &az)
 {
     Wire.beginTransmission(BMI160_ADDR);
     Wire.write(0x12);
 
     if (Wire.endTransmission(false) != 0)
-    {
         return false;
-    }
 
-    int bytesReceived = Wire.requestFrom(BMI160_ADDR, 6);
-
-    if (bytesReceived != 6)
-    {
+    if (Wire.requestFrom(BMI160_ADDR, 6) != 6)
         return false;
-    }
 
     ax = (int16_t)(Wire.read() | (Wire.read() << 8));
     ay = (int16_t)(Wire.read() | (Wire.read() << 8));
@@ -60,35 +61,40 @@ bool readBMI160(int16_t &ax, int16_t &ay, int16_t &az)
     return true;
 }
 
-// ===== CALCULATE MAGNITUDE =====
+// ================= ACC MAGNITUDE =================
 float calculateAccelerationMagnitude(int16_t ax, int16_t ay, int16_t az)
 {
-    float fax = (float)ax;
-    float fay = (float)ay;
-    float faz = (float)az;
-
-    return sqrt(fax * fax + fay * fay + faz * faz);
+    return sqrt(ax * ax + ay * ay + az * az);
 }
 
-// ===== STEP DETECTION =====
+// ================= STEP DETECTION =================
 void detectStep(float acc)
 {
-    // high-pass like filter
-    float filtered = acc - prevAcc;
+    // low-pass filter (smooth signal)
+    filteredAcc = alpha * filteredAcc + (1 - alpha) * acc;
 
-    float diff = filtered - prevFiltered;
+    float diff = filteredAcc - prevFiltered;
 
-    // peak detection
+    unsigned long now = millis();
+
+    // peak detection + debounce
     if (prevFiltered > 0 &&
         diff < 0 &&
-        filtered > 400)
+        filteredAcc > 300 &&   // threshold (adjust if needed)
+        (now - lastStepTime > stepDelay))
     {
         stepCount++;
+        lastStepTime = now;
 
         Serial.print("STEP: ");
         Serial.println(stepCount);
     }
 
-    prevAcc = acc;
-    prevFiltered = filtered;
+    prevFiltered = filteredAcc;
+}
+
+// ================= DISTANCE =================
+float getDistanceKm()
+{
+    return (stepCount * stepLength) / 1000.0;
 }
