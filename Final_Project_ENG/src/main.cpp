@@ -1,7 +1,4 @@
 #include <Arduino.h>
-#include <Wire.h>
-
-#include "components/bmi.h"
 
 void setup()
 {
@@ -9,31 +6,13 @@ void setup()
 
     delay(5000);
 
-    Serial.println("START");
-
-    Wire.begin();
-
-    initBMI160();
-
-    Serial.println("BMI READY");
+    Serial.println();
+    Serial.println("HELLO ESP32");
 }
 
 void loop()
 {
-    Serial.println("XYZ");
-
-    int16_t ax, ay, az;
-
-    readBMI160(ax, ay, az);
-
-    Serial.print("AX: ");
-    Serial.print(ax);
-
-    Serial.print(" AY: ");
-    Serial.print(ay);
-
-    Serial.print(" AZ: ");
-    Serial.println(az);
+    Serial.println("RUNNING");
 
     delay(1000);
 }
