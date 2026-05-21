@@ -1,61 +1,96 @@
-import serial
 import pandas as pd
-import time
+import numpy as np
+import os
+import joblib
 
 # =========================
-# CONFIG
+# LOAD ESP32 RAW DATA
 # =========================
-PORT = "COM3"        # change this (Windows: COM3, COM4...)
-BAUD = 115200
-OUTPUT_FILE = "esp32_data.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# =========================
-# OPEN SERIAL
-# =========================
-ser = serial.Serial(PORT, BAUD, timeout=1)
-time.sleep(2)
-
-print("Reading ESP32 data... Press Ctrl+C to stop")
-
-data = []
-
-try:
-    while True:
-        line = ser.readline().decode("utf-8").strip()
-
-        if not line:
-            continue
-
-        # skip headers or debug text
-        if "time_ms" in line or "SYSTEM" in line:
-            continue
-
-        parts = line.split(",")
-
-        # expect: time_ms,bpm,steps,distance
-        if len(parts) == 4:
-            try:
-                row = {
-                    "time_ms": float(parts[0]),
-                    "bpm": float(parts[1]),
-                    "steps": int(parts[2]),
-                    "distance": float(parts[3])
-                }
-
-                data.append(row)
-
-                print(row)
-
-            except:
-                continue
-
-except KeyboardInterrupt:
-    print("\nStopping... saving CSV")
+df = pd.read_csv(
+    os.path.join(BASE_DIR, "esp32_data.csv")
+)
 
 # =========================
-# EXPORT CSV
+# CLEAN
 # =========================
-df = pd.DataFrame(data)
-df.to_csv(OUTPUT_FILE, index=False)
+df = df.dropna()
 
-print(f"Saved to {OUTPUT_FILE}")
+# remove bpm = 0
+df = df[df["bpm"] > 0]
+
+# =========================
+# COMPUTE FEATURES
+# =========================
+
+# average heart rate
+avg_hr = df["bpm"].mean()
+
+# total distance
+distance = df["distance"].max()
+
+# running time in minutes
+time_min = (
+    df["time_ms"].max() -
+    df["time_ms"].min()
+) / 60000.0
+
+# pace
+pace = distance / time_min
+
+# HR x time
+hr_time = avg_hr * time_min
+
+# =========================
+# USER INFO
+# =========================
+age = 21
+height = 170
+weight = 65
+
+# BMI
+bmi = weight / ((height / 100) ** 2)
+
+# =========================
+# CREATE MODEL INPUT
+# =========================
+features = pd.DataFrame([{
+
+    "Age": age,
+
+    "Height(cm)": height,
+
+    "Weight(kg)": weight,
+
+    "BMI": bmi,
+
+    "Average Heart Rate": avg_hr,
+
+    "Distance(km)": distance,
+
+    "Running Time(min)": time_min,
+
+    "Pace": pace,
+
+    "HR_Time": hr_time
+}])
+
+print("\n========== MODEL INPUT ==========\n")
+print(features)
+
+# =========================
+# LOAD MODEL
+# =========================
+model = joblib.load(
+    os.path.join(BASE_DIR, "calorie_model.pkl")
+)
+
+# =========================
+# PREDICT
+# =========================
+prediction = model.predict(features)[0]
+
+print("\n=================================")
+print(f"Predicted Calories: {prediction:.2f} kcal")
+print("=================================\n")
