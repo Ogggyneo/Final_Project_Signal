@@ -2,9 +2,7 @@
 #include <Wire.h>
 
 MAX30105 particleSensor;
-
 float bpm = 0;
-
 long lastBeat = 0;
 long prevIR = 0;
 long prevDiffIR = 0;
